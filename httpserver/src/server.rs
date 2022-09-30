@@ -2,6 +2,8 @@ use std::{io::Read, net::TcpListener};
 
 use http::httprequest::HttpRequest;
 
+use super::router::Router;
+
 pub struct Server<'a> {
     socket_addr: &'a str,
 }
@@ -26,6 +28,8 @@ impl<'a> Server<'a> {
             stream.read(&mut read_buffer).unwrap();
 
             let request: HttpRequest = String::from_utf8(read_buffer.to_vec()).unwrap().into();
+
+            Router::route(request, &mut stream);
         }
     }
 }
