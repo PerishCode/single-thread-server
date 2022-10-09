@@ -20,7 +20,7 @@ pub trait Handler {
 #[derive(Serialize, Deserialize)]
 pub struct OrderStatus {
     order_id: i32,
-    order_data: String,
+    order_date: String,
     order_status: String,
 }
 
@@ -34,10 +34,15 @@ impl WebServiceHandler {
         let full_path = format!("{}/{}", data_path, "orders.json");
         let json_contents = fs::read_to_string(full_path);
 
-        let orders: Vec<OrderStatus> =
-            serde_json::from_str(json_contents.unwrap().as_str()).unwrap();
+        // let orders: Vec<OrderStatus> = serde_json::from_str(json_str).unwrap();
+        // orders
 
-        orders
+        match serde_json::from_str(json_contents.unwrap().as_str()) {
+            Ok(orders) => orders,
+            Err(error) => {
+                panic!("Some problem: {:?}", error)
+            }
+        }
     }
 }
 
@@ -50,8 +55,21 @@ impl Handler for WebServiceHandler {
     //     HttpResponse::new("200", None, None)
 
     // }
-    fn handle(_request: &HttpRequest) -> HttpResponse {
-        HttpResponse::new("200", None, None)
+    fn handle(request: &HttpRequest) -> HttpResponse {
+        let http::httprequest::Resource::Path(s) = &request.resource;
+        let route: Vec<&str> = s.split("/").collect();
+
+        match route[2] {
+            "shipping" if route.len() > 2 && route[3] == "orders" => {
+                let body = Some(serde_json::to_string(&Self::load_json()).unwrap());
+
+                let mut headers: HashMap<&str, &str> = HashMap::new();
+
+                headers.insert("Content-Type", "application/json");
+                HttpResponse::new("200", Some(headers), body)
+            }
+            _ => HttpResponse::new("404", None, Self::load_file("404.html")),
+        }
     }
 }
 

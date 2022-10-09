@@ -1,6 +1,6 @@
 use std::net::TcpStream;
 
-use http::{httprequest::HttpRequest, httpresponse::HttpResponse};
+use http::httprequest::HttpRequest;
 
 use crate::handler::{Handler, StaticPageHandler, WebServiceHandler};
 
